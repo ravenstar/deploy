@@ -1,15 +1,16 @@
 #!/bin/bash
 
-#
+# DEPLOY v0.1
+# ````````````
 # Minimalistic Deployment via SSH
 #
-# Author: RavenStar (https://github.com/ravenstar/
+# Author: RavenStar (https://github.com/ravenstar/)
 # 
 
 
 VERSION="0.1"
 CONFIG="./.deploy"
-TARGET="deploy"
+TARGET="deploy" #section of the config to run
 SSH_HOST=
 SSH_PATH=
 
@@ -48,13 +49,14 @@ function usage() {
 	echo
 	echo "    -v, --version     Print version"
 	echo "    -h, --help        Print help"
+	echo "    -S, --sentry      Prints sentry gun gfx"
 	echo
 	echo "COMMANDS:"
 	echo
 	echo "    <target>          Deploy to <target>"
 	echo "    list              Print list of possible targets"
-	echo "    console, ssh      Open SSH session to remote host"
-	echo "    exec <cmd         Executes <cmd> on remote host"
+	echo "    shell, ssh        Open SSH session to remote host"
+	echo "    exec <cmd>        Executes <cmd> on remote host"
 	echo
 }
 function version() {
@@ -93,6 +95,20 @@ function justdoit() {
 	#echo "[*] SSH script: $@"
 	ssh $2 "$SSH_HOST" "cd \"$SSH_PATH\"; $1"
 }
+function list_sections() {
+	read_config
+	echo "Available deployments for $SSH_HOST: "
+	awk '/^\[/ {print "\t• " $1}' $CONFIG | tr -d '[]' # trim off square brackets
+}
+function open_shell() {
+	read_config
+	justdoit "\$SHELL --login" "-t"
+}
+function exec_cmd() {
+	read_config
+	echo "Executing on $SSH_HOST; $@"
+	justdoit $@
+}
 function deploy() {
 	read_config
 	
@@ -113,8 +129,11 @@ if [ -n "$args" ]; then
 	case $args in
 		-v|--version) version; exit ;;
 		-h|--help) usage; exit ;;
+		-S|--sentry) sentry; exit ;;
 		
-		-S) sentry; exit ;;
+		list) list_sections; exit ;;
+		shell|ssh) open_shell; exit ;;
+		exec) exec_cmd; exit ;;
 		
 		*) TARGET="$args" ;;
 	esac
