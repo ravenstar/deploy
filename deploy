@@ -1,0 +1,124 @@
+#!/bin/bash
+
+#
+# Minimalistic Deployment via SSH
+#
+# Author: RavenStar (https://github.com/ravenstar/
+# 
+
+
+VERSION="0.1"
+CONFIG="./.deploy"
+TARGET="deploy"
+SSH_HOST=
+SSH_PATH=
+
+function sentry() {
+	echo
+	echo "              _________ "
+	echo "            /'        /| "
+	echo "           /         / |_ "
+	echo "          /         /  //| "
+	echo "         /_________/  ////| "
+	echo "        |   _ _    | 8o////| "
+	echo "        | /'// )_  |   8///| "
+	echo "        |/ // // ) |   8o///| "
+	echo "        / // // //,|  /  8//| "
+	echo "       / // // /// | /   8//| "
+	echo "      / // // ///__|/    8//| "
+	echo "     /.(_)// /// |       8///| "
+	echo "    (_)' '(_)//| |       8////|___________ "
+	echo "   (_) /_\ (_)'| |        8/////////////// "
+	echo "   (_) \'/ (_)'|_|         8///////////// "
+	echo "    (_)._.(_) d' Hb         8oooooooopb' "
+	echo "      '(_)'  d'  H'b "
+	echo "            d'   'b'b "
+	echo "           d'     H 'b      Care package deployed!"
+	echo "          d'      'b 'b "
+	echo "         d'           'b "
+	echo "        d'             'b "
+	echo
+}
+function usage() {
+	version
+	echo
+	echo "USAGE:  `basename $0` [command] [option]"
+	echo
+	echo "OPTIONS:"
+	echo
+	echo "    -v, --version     Print version"
+	echo "    -h, --help        Print help"
+	echo
+	echo "COMMANDS:"
+	echo
+	echo "    <target>          Deploy to <target>"
+	echo "    list              Print list of possible targets"
+	echo "    console, ssh      Open SSH session to remote host"
+	echo "    exec <cmd         Executes <cmd> on remote host"
+	echo
+}
+function version() {
+	echo
+	echo "`basename $0` v$VERSION"
+}
+function abort() {
+# Prints error message then exits
+	echo
+	echo $@
+	exit 1;
+}
+function read_config() {
+	test -f $CONFIG || abort "Configuration file ($CONFIG) not found!" # Check config exists
+	
+	# eval first section of config
+	local config=`awk '/^/ {print; exit}' RS= $CONFIG`
+	eval $config
+	
+	# Ensure the required variables are set in config
+	test -z "$host" && abort "Error with config file: 'host' is undefined."
+	test -z "$path" && abort "Error with config file: 'host' is undefined."
+	test -z "$host" || test -z "$path" && exit 1 # rly needed?
+
+	# Set global variables to that from the config
+	SSH_HOST=$host
+	SSH_PATH=$path
+	
+	#echo "[*] Config file ok!"
+}
+function read_config_section() {
+	grep "^\[$1\]" $CONFIG &> /dev/null # we only need the exit code ;)
+}
+function justdoit() {
+# Run cmd/script via SSH, cd to remote path
+	#echo "[*] SSH script: $@"
+	ssh $2 "$SSH_HOST" "cd \"$SSH_PATH\"; $1"
+}
+function deploy() {
+	read_config
+	
+	# Checks for "[<$TARGET>]" in config file. FYI; $TARGET gets set while parsing arguments
+	read_config_section $TARGET || abort "Error with config file: $TARGET section not found."
+	
+	# Reads a "[blah]" section from config
+	local script=`awk "/^\[$TARGET\]/ {print; exit}" RS= $CONFIG | sed 1d`
+	
+	echo "Deploying $TARGET on $SSH_HOST..."
+	sentry # deploy sentry ^_^
+	justdoit "$script"
+}
+
+# Parse arguements
+args=$1;shift
+if [ -n "$args" ]; then
+	case $args in
+		-v|--version) version; exit ;;
+		-h|--help) usage; exit ;;
+		
+		-S) sentry; exit ;;
+		
+		*) TARGET="$args" ;;
+	esac
+fi
+
+# Start deployment...
+deploy
