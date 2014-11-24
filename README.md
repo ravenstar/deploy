@@ -8,6 +8,7 @@ INSTALL
 =====
 
 To install this script simply run the following line from a terminal.
+
     zDeploypath=/usr/local/bin/deploy; curl -o $zDeploypath https://raw.githubusercontent.com/ravenstar/deploy/master/deploy; chmod +x $zDeploypath; unset zDeploypath
 
 
