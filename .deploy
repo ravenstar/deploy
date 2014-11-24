@@ -1,0 +1,16 @@
+host='disko'
+path='/var/www'
+#"host" may also include additional SSH parameters, eg: host="archer@isis.za -p 9001"
+
+[deploy]
+git checkout master
+git pull
+npm install
+
+[status]
+uptime
+
+[test]
+uptime
+echo "Online users: "; users
+ls /home/
