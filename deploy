@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# DEPLOY v0.1
+# DEPLOY
 # ````````````
 # Minimalistic Deployment via SSH
 #
@@ -8,7 +8,7 @@
 # 
 
 
-VERSION="0.1"
+VERSION="0.2"
 CONFIG="./.deploy"
 TARGET="deploy" #section of the config to run
 SSH_HOST=
@@ -67,7 +67,7 @@ function abort() {
 # Prints error message then exits
 	echo
 	echo $@
-	exit 1;
+	exit 1
 }
 function read_config() {
 	test -f $CONFIG || abort "Configuration file ($CONFIG) not found!" # Check config exists
@@ -79,7 +79,7 @@ function read_config() {
 	# Ensure the required variables are set in config
 	test -z "$host" && abort "Error with config file: 'host' is undefined."
 	test -z "$path" && abort "Error with config file: 'host' is undefined."
-	test -z "$host" || test -z "$path" && exit 1 # rly needed?
+	test -z "$host" || test -z "$path" && exit 2
 
 	# Set global variables to that from the config
 	SSH_HOST=$host
